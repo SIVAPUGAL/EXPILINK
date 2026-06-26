@@ -1,0 +1,9 @@
+Django>=5.0
+Pillow
+opencv-python
+numpy
+pytesseract
+pyzbar
+scikit-learn
+pandas
+python-dateutil
