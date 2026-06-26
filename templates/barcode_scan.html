@@ -1,0 +1,1034 @@
+
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ExpiLink — Barcode Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#020617;
+      --bg-2:#030B25;
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+      --glass-border: rgba(255,255,255,0.06);
+      --cyan:#22D3EE;
+      --blue:#3B82F6;
+      --muted:rgba(255,255,255,0.68);
+      --accent-glow: 0 20px 60px rgba(34,211,238,0.06);
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg),var(--bg-2));color:#EEF2FF}
+    a{color:inherit}
+
+    main.page{margin-left:280px; padding:32px; min-height:100vh; box-sizing:border-box}
+    .container{width:100%;margin:0;max-width:none}
+    
+    @media (max-width:1024px){
+      main.page{margin-left:102px; width:calc(100% - 102px)}
+    }
+    @media (max-width:1000px){
+      .sidebar{display:none}
+      .page{margin-left:0}
+    }
+    
+    @media (max-width:768px){
+      main.page{margin-left:102px; width:calc(100% - 102px); padding:20px}
+      .layout{grid-template-columns:1fr; gap:14px}
+    }
+    
+    @media (max-width:480px){
+      main.page{padding:16px}
+      .layout{gap:12px}
+    }
+
+    /* Header */
+    .header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+    .title-wrap{max-width:780px}
+    h1{font-size:32px;margin:0;font-weight:700}
+    .subtitle{color:var(--muted);margin-top:6px;font-weight:500}
+    
+    @media (max-width:1024px){
+      .header{flex-direction:column; gap:12px}
+      h1{font-size:28px}
+      .subtitle{font-size:14px}
+    }
+    
+    @media (max-width:768px){
+      h1{font-size:24px}
+      .header > div:last-child{display:none}
+    }
+
+    .toolbar{display:flex;gap:12px;align-items:center;margin-top:20px;flex-wrap:wrap}
+    .toolbar{position:relative;z-index:60}
+    
+    @media (max-width:1024px){
+      .toolbar{gap:8px;margin-top:16px}
+      .glass-input{font-size:14px; padding:10px 12px}
+      .btn{padding:8px 12px; font-size:13px}
+    }
+    
+    @media (max-width:768px){
+      .toolbar{gap:6px; flex-direction:column}
+      .glass-input{width:100%}
+      .btn{width:100%}
+    }
+    .glass-input{flex:1;padding:12px 14px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);color:#E8F0FF;outline:none}
+    .btn{padding:10px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:800}
+    .btn{position:relative;z-index:70}
+    .btn-primary{background:linear-gradient(90deg,var(--cyan),var(--blue));color:#021028;box-shadow:var(--accent-glow);}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    .layout{display:grid;grid-template-columns:2fr 360px;gap:18px;margin-top:20px}
+    @media (max-width:1200px){.layout{grid-template-columns:2fr 320px}}
+    @media (max-width:1024px){.layout{grid-template-columns:1fr; gap:14px}}
+    @media (max-width:768px){.layout{grid-template-columns:1fr; gap:12px}}
+
+    .scanner-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:16px;padding:18px;border:1px solid var(--glass-border);backdrop-filter:blur(14px);box-shadow:0 20px 60px rgba(2,6,23,0.6)}
+    
+    @media (max-width:1024px){
+      .scanner-card{padding:14px; border-radius:12px}
+    }
+    
+    @media (max-width:768px){
+      .scanner-card{padding:12px}
+    }
+    .scanner-title{display:flex;justify-content:space-between;align-items:center}
+    .scanner-frame{margin-top:14px;border-radius:12px;border:1px solid rgba(34,211,238,0.14);height:420px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(3,10,30,0.4))}
+    
+    @media (max-width:1024px){
+      .scanner-frame{height:380px}
+    }
+    
+    @media (max-width:768px){
+      .scanner-frame{height:340px}
+      .scanner-title{flex-direction:column; gap:12px; align-items:flex-start}
+      .modes{flex-wrap:wrap}
+    }
+    
+    @media (max-width:480px){
+      .scanner-frame{height:300px}
+      .modes{flex-direction:column; width:100%}
+      .mode-toggle{width:100%; font-size:12px; padding:6px 10px}
+    }
+    .scanner-placeholder{color:var(--muted);text-align:center}
+
+    /* scanning frame visuals */
+    .scan-box{width:84%;height:72%;border-radius:10px;border:2px dashed rgba(34,211,238,0.12);box-shadow:0 8px 40px rgba(34,211,238,0.03) inset;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .scan-box video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px;z-index:1;background:#000}
+    .scan-box #cameraPlaceholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:2;color:var(--muted);background:rgba(2,6,23,0.55);}
+    .roi-box{position:absolute;width:40%;height:40%;border:2px solid rgba(34,211,238,0.6);box-shadow:0 0 28px rgba(34,211,238,0.08);border-radius:8px;pointer-events:none;z-index:3}
+    .scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scanMove 2s linear infinite;box-shadow:0 0 24px var(--cyan);z-index:3}
+    @keyframes scanMove{0%{top:10%}50%{top:90%}100%{top:10%}}
+
+    .result-panel{margin-top:14px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
+    .blur-overlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);display:none;z-index:50;pointer-events:none}
+    .scan-anim{animation:scanPulse 1.6s infinite}
+    @keyframes scanPulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,0.12)}50%{box-shadow:0 0 40px 8px rgba(34,211,238,0.06)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+    .success-badge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:linear-gradient(90deg,#22c55e,#60a5fa);color:#021028;font-weight:800;box-shadow:0 12px 40px rgba(34,211,238,0.08);transform:scale(0.96);animation:popIn 240ms forwards}
+    @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+    .confidence{font-weight:700;color:var(--muted);font-size:13px}
+    .found-glow{box-shadow:0 8px 40px rgba(34,197,94,0.18), 0 0 80px rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.22)}
+    .notfound-glow{box-shadow:0 8px 40px rgba(239,68,68,0.12), 0 0 80px rgba(239,68,68,0.04); border:1px solid rgba(239,68,68,0.16)}
+    .result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .result-row:last-child{border-bottom:none}
+
+    .modes{display:flex;gap:8px;margin-top:12px}
+    .mode-toggle{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.03);background:transparent;cursor:pointer}
+    .mode-toggle.active{background:linear-gradient(90deg,var(--cyan),var(--blue));color:#021028;font-weight:800;box-shadow:var(--accent-glow)}
+
+    .history-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;border:1px solid var(--glass-border);height:100%;display:flex;flex-direction:column}
+    .history-list{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+    .history-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(34,211,238,0.03);color:#DFF7FA}
+
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  {% include 'components/sidebar.html' %}
+
+  <main class="page">
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Barcode Scanner</h1>
+          <div class="subtitle">Scan products instantly and update inventory in real time.</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="btn btn-ghost">Import</div>
+          <div class="btn btn-ghost">Export</div>
+        </div>
+      </header>
+
+      <form id="barcodeForm" method="POST" class="toolbar">
+        <input id="barcodeInput" name="barcode" class="glass-input" placeholder="Enter barcode number..." autocomplete="off">
+        <button id="scanBtn" class="btn btn-primary" type="submit">Scan Barcode</button>
+        <button id="cameraBtn" class="btn btn-ghost" type="button">Enable Camera</button>
+        <label class="btn btn-ghost" style="cursor:pointer">
+          Upload Barcode Image
+          <input id="uploadFile" type="file" accept="image/*" style="display:none">
+        </label>
+        {% csrf_token %}
+      </form>
+
+      <div class="layout">
+        <section class="scanner-card">
+          <div class="scanner-title">
+            <div>
+              <div style="font-weight:800;font-size:16px">Live OCR Product Scanner</div>
+              <div id="cameraStatus" class="muted">Camera Inactive</div>
+            </div>
+            <div class="modes">
+              <button id="modeOCR" class="mode-toggle">OCR Demo Mode</button>
+              <button id="modeSim" class="mode-toggle">Demo Simulation</button>
+              <button id="modeInventory" class="mode-toggle active">Inventory Mode</button>
+              <button id="modeSales" class="mode-toggle">Sales Mode</button>
+            </div>
+          </div>
+
+          <div class="scanner-frame" id="scannerFrame">
+            <div class="scan-box" id="scanBox">
+              <video id="scannerVideo" autoplay playsinline muted webkit-playsinline style="display:none;width:100%;height:100%;border-radius:12px;object-fit:cover;"></video>
+              <div class="scan-line"></div>
+              <div id="roiBox" class="roi-box"></div>
+              <div id="cameraPlaceholder" class="scanner-placeholder">📷<div style="height:8px"></div><div id="placeholderText">Camera Disabled</div></div>
+            </div>
+          </div>
+
+          <div id="ocrDebug" class="result-panel" style="display:none;margin-top:12px">
+            <div style="font-weight:700;margin-bottom:8px">OCR Debug Panel</div>
+            <div class="result-row"><div>OCR Raw Text</div><div id="ocrRaw" class="muted">—</div></div>
+            <div class="result-row"><div>Detected Code</div><div id="ocrCode" class="muted">—</div></div>
+            <div class="result-row"><div>Matched Product</div><div id="ocrMatch" class="muted">—</div></div>
+          </div>
+
+          <div id="scanResult" class="result-panel" style="display:none">
+            <div style="font-weight:700;font-size:15px">Scan Result <span id="resultBadge" style="margin-left:12px"></span></div>
+            <div class="result-row"><div>Product Name</div><div id="resName" class="muted">—</div></div>
+            <div class="result-row"><div>Product Code</div><div id="resBarcode" class="muted">—</div></div>
+            <div class="result-row"><div>Category</div><div id="resCategory" class="muted">—</div></div>
+            <div class="result-row"><div>Quantity</div><div id="resQty" class="muted">—</div></div>
+            <div class="result-row"><div>Expiry Date</div><div id="resExp" class="muted">—</div></div>
+            <div class="result-row"><div>Confidence</div><div id="resConf" class="muted">—</div></div>
+            <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+              <button id="addStockBtn" class="btn btn-primary">Add to Inventory</button>
+              <button id="sellBtn" class="btn btn-ghost">Record Sale</button>
+            </div>
+          </div>
+          <canvas id="ocrCanvas" width="1280" height="720" style="display:none"></canvas>
+        </section>
+
+        <aside class="history-card">
+          <div style="font-weight:800">Active Scan History</div>
+          <div class="muted" style="font-size:13px;margin-top:4px">Latest successful scans</div>
+          <div class="history-list" id="historyList"></div>
+        </aside>
+      </div>
+
+    </div>
+  </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script>
+    function initOCR() {
+      console.log('after load typeof Tesseract =>', typeof Tesseract);
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      if (typeof Tesseract === 'undefined') {
+        // If script hasn't loaded yet, wait for it
+        const s = document.querySelector('script[src*="tesseract.js"]');
+        if (s) s.addEventListener('load', initOCR);
+      } else {
+        initOCR();
+      }
+
+      console.log('typeof Tesseract at DOMContentLoaded =>', typeof Tesseract);
+
+        const DEMO_PRODUCTS = {
+          "890001": { name: "Milk", category: "Dairy", quantity: 100 },
+          "890002": { name: "Bread", category: "Bakery", quantity: 80 },
+          "890003": { name: "Biscuit", category: "Snacks", quantity: 120 },
+          "890004": { name: "Rice", category: "Grocery", quantity: 200 },
+          "890005": { name: "Sugar", category: "Grocery", quantity: 150 }
+        };
+
+      async function processOCR(imageElement) {
+        try {
+          const result = await Tesseract.recognize(imageElement, 'eng');
+          const text = (result && result.data && result.data.text) ? result.data.text.replace(/\D/g,'') : '';
+          console.log('Detected OCR:', text);
+          return text;
+        } catch (err) {
+          console.error('Tesseract error', err);
+          return '';
+        }
+      }
+
+      // simple beep using WebAudio
+      function beep(type='success'){
+        try{
+          const ctx = new (window.AudioContext||window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.type = 'sine';
+          o.frequency.value = (type==='success')?880:220;
+          o.start();
+          g.gain.setValueAtTime(0.0001, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+          setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08); o.stop(); ctx.close(); }, 150);
+        }catch(e){/*ignore*/}
+      }
+
+      const video = document.getElementById('scannerVideo');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const historyList = document.getElementById('historyList')||document.createElement('div');
+      const statTotal = document.getElementById('statTotal');
+      let totalScans = 0;
+      let lastDetected = '';
+
+      async function captureAndOCR(){
+        if (!video || video.readyState < 2) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        if (!canvas.width || !canvas.height) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const text = await processOCR(canvas);
+        if (!text) return;
+        // if same as last detected within short time, ignore
+        if (text === lastDetected) return;
+        lastDetected = text;
+
+        // handle only first 6 digits
+        const code = text.slice(0,6);
+        totalScans += 1;
+        if (statTotal) statTotal.textContent = totalScans;
+
+        if (DEMO_PRODUCTS[code]){
+          // add to history
+          const item = DEMO_PRODUCTS[code];
+          const li = document.createElement('div');
+          li.className = 'history-item';
+          li.textContent = `${code} — ${item.name} (${item.category}) — qty:${item.quantity}`;
+          historyList.prepend(li);
+          // show success
+          console.log('Product found:', item.name);
+          beep('success');
+          // flash result panel
+          const scanResult = document.getElementById('scanResult');
+          if (scanResult){ scanResult.style.display = 'block'; }
+        } else {
+          // not found
+          console.log('Product Not Found for code', code);
+          beep('error');
+          const scanResult = document.getElementById('scanResult');
+          if (scanResult){ scanResult.style.display = 'block'; }
+        }
+      }
+
+      // run OCR every 2 seconds while camera is active
+      setInterval(()=>{
+        try{ captureAndOCR(); }catch(e){console.error(e)}
+      },2000);
+
+    });
+    </script>
+  <div id="blurOverlay" class="blur-overlay"></div>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    // ensure overlays don't block and buttons are enabled after DOM ready
+    window.addEventListener('DOMContentLoaded', ()=>{
+      try{
+        const overlay = document.getElementById('blurOverlay'); if(overlay){ overlay.style.display='none'; overlay.style.pointerEvents='none'; }
+        const canvas = document.getElementById('ocrCanvas'); if(canvas) canvas.style.pointerEvents='none';
+        [document.getElementById('modeOCR'), document.getElementById('modeSim'), document.getElementById('modeInventory'), document.getElementById('modeSales'), document.getElementById('cameraBtn'), document.getElementById('scanBtn')].forEach(btn=>{ if(btn){ btn.style.cursor='pointer'; btn.style.pointerEvents='auto'; } });
+        console.log('Scanner UI ready — overlays hidden, buttons enabled');
+      }catch(e){ console.warn('init UI fix error', e); }
+    });
+    // highlight active sidebar item (shared component)
+    (function(){
+      try{
+        const link = document.querySelector('.nav-list a[href="/barcode-scan/"]');
+        if(link){ link.classList.add('active'); }
+      }catch(e){}
+    })();
+    // audio feedback for demo mode
+    const scanSound = new Audio('/static/sounds/scan.wav');
+    const successSound = new Audio('/static/sounds/success.wav');
+    const errorSound = new Audio('/static/sounds/error.wav');
+    // Wire interactive behavior after DOM ready to ensure elements exist and clicks are not blocked
+    window.addEventListener('DOMContentLoaded', ()=>{
+      console.log('Setting up scanner event bindings');
+      const barcodeInput = document.getElementById('barcodeInput');
+      const scanBtn = document.getElementById('scanBtn');
+      const cameraBtn = document.getElementById('cameraBtn');
+      const uploadFile = document.getElementById('uploadFile');
+      const scanResult = document.getElementById('scanResult');
+      const resName = document.getElementById('resName');
+      const resBarcode = document.getElementById('resBarcode');
+      const resCategory = document.getElementById('resCategory');
+      const resQty = document.getElementById('resQty');
+      const resExp = document.getElementById('resExp');
+      const resConf = document.getElementById('resConf');
+      const historyList = document.getElementById('historyList');
+      const modeInventory = document.getElementById('modeInventory');
+      const modeSales = document.getElementById('modeSales');
+      const modeOCRBtn = document.getElementById('modeOCR');
+      const modeSimBtn = document.getElementById('modeSim');
+
+      let cameraEnabled = false;
+      let currentMode = 'inventory';
+      let ocrActive = false;
+      
+      // html5-qrcode scanner reference
+      let htmlScanner = null;
+      
+      // worker for Tesseract OCR (shared)
+      window.ocrWorker = window.ocrWorker || null;
+      let ocrWorker = window.ocrWorker;
+      let simActive = false;
+
+      // safety: ensure overlay won't block controls
+      const overlay = document.getElementById('blurOverlay'); if(overlay){ overlay.style.pointerEvents='none'; overlay.style.display='none'; }
+
+      if(modeOCRBtn) modeOCRBtn.addEventListener('click', async ()=>{
+        console.log('OCR Demo Mode clicked');
+        const active = modeOCRBtn.classList.toggle('active');
+        if(active){
+          ocrActive = true;
+          modeInventory.classList.remove('active'); modeSales.classList.remove('active');
+          if(!cameraEnabled){
+            console.log('Starting camera for OCR');
+            try{ await startCamera(); cameraEnabled=true; cameraBtn.textContent='Disable Camera'; startOCRLoop(); }catch(e){ console.error('Failed to start camera for OCR', e); }
+          } else startOCRLoop();
+        } else { ocrActive = false; stopOCRLoop(); }
+      });
+
+      if(modeSimBtn) modeSimBtn.addEventListener('click', async ()=>{
+        console.log('Demo Simulation clicked');
+        const active = modeSimBtn.classList.toggle('active'); simActive = active;
+        if(active){ if(!cameraEnabled){ try{ await startCamera(); cameraEnabled=true; cameraBtn.textContent='Disable Camera'; }catch(e){ console.error('Failed to start camera for sim', e);} } startSimLoop(); }
+        else stopSimLoop();
+      });
+
+      if(modeInventory) modeInventory.addEventListener('click', ()=>{ console.log('Inventory Mode clicked'); currentMode='inventory'; modeInventory.classList.add('active'); modeSales.classList.remove('active'); });
+      if(modeSales) modeSales.addEventListener('click', ()=>{ console.log('Sales Mode clicked'); currentMode='sales'; modeSales.classList.add('active'); modeInventory.classList.remove('active'); });
+
+      try{ if(modeInventory){ modeInventory.style.cursor='pointer'; modeInventory.style.pointerEvents='auto'; } if(modeSales){ modeSales.style.cursor='pointer'; modeSales.style.pointerEvents='auto'; } console.log('Inventory and Sales mode buttons wired'); }catch(e){ console.warn('mode buttons init error', e) }
+
+      const barcodeForm = document.getElementById('barcodeForm');
+      if(barcodeForm){
+        barcodeForm.addEventListener('submit', async (event)=>{
+          event.preventDefault();
+          const code = (barcodeInput && barcodeInput.value||'').trim();
+          if(!code){
+            alert('Please enter a barcode number before scanning.');
+            return;
+          }
+          console.log('barcodeForm submit code=', code);
+          await handleScan(code);
+        });
+      }
+
+      if(uploadFile) uploadFile.addEventListener('change', (e)=>{
+        console.log('Upload file change', e);
+        const f = (e.target.files && e.target.files[0]) || null; if(!f) return;
+        const reader = new FileReader();
+        reader.onload = async function(ev){
+          try{
+            const dataUrl = ev.target.result;
+            const img = new Image(); img.src = dataUrl; img.style.maxWidth='80%'; img.style.maxHeight='80%'; img.style.borderRadius='12px';
+            const scanBox = document.getElementById('scanBox'); const prev = document.getElementById('uploadPreview'); if(prev) prev.remove(); img.id = 'uploadPreview';
+            img.onload = async ()=>{
+              const video = document.getElementById('scannerVideo'); if(video){ video.style.display='none'; }
+              const placeholder = document.getElementById('cameraPlaceholder'); if(placeholder) placeholder.style.display = 'none';
+              scanBox.appendChild(img);
+              showTempMessage('Processing uploaded image...', 1200);
+              const digits = (f.name||'').match(/\d{4,}/g); let code = digits? digits[0] : null;
+              if(!code){ if(window.Tesseract && Tesseract.recognize){ try{ const { data } = await Tesseract.recognize(dataUrl); const text = data.text||''; const found = text.match(/\d{4,}/g); if(found) code = found[0]; }catch(err){ console.warn('Tesseract read failed', err); } } }
+              if(code){ if(barcodeInput) barcodeInput.value = code; handleScan(code); addHistory('Upload: ' + code); } else { showTempMessage('No barcode detected', 1800); }
+            };
+          }catch(err){ console.error('upload preview error', err); }
+        };
+        reader.readAsDataURL(f);
+      });
+
+      if(cameraBtn) cameraBtn.addEventListener('click', async ()=>{
+        console.log('Camera button clicked, cameraEnabled:', cameraEnabled);
+        
+        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+          alert('Camera API not supported in this browser. Please use Chrome, Firefox, or Edge.');
+          return;
+        }
+        
+        if(!cameraEnabled){
+          console.log('Starting camera...');
+          try{
+            await startCamera();
+            cameraEnabled = true;
+            cameraBtn.textContent = 'Disable Camera';
+            console.log('Camera enabled successfully');
+          } catch(err){
+            cameraEnabled = false;
+            cameraBtn.textContent = 'Enable Camera';
+            console.error('Failed to start camera:', err);
+          }
+        } else {
+          console.log('Stopping camera...');
+          stopCamera();
+          cameraEnabled = false;
+          cameraBtn.textContent = 'Enable Camera';
+          console.log('Camera disabled');
+        }
+      });
+    });
+
+    async function handleScan(code){
+      console.log('handleScan code=', code);
+      resBarcode.innerText = code;
+      try{ scanSound && scanSound.play().catch(()=>{}); }catch(e){}
+      try{
+        const resp = await fetch('/api/lookup/?barcode=' + encodeURIComponent(code), {headers:{'X-Requested-With':'XMLHttpRequest'}});
+        console.log('Lookup response status=', resp.status);
+        if(resp.status === 404){
+          const createNew = confirm('Barcode not found. Would you like to create a new product record?');
+          if(!createNew){
+            fillResult(null, code);
+            return;
+          }
+          const created = await createNewBarcodeRecord(code);
+          if(created){
+            return handleScan(code);
+          }
+          fillResult(null, code);
+          try{ errorSound.play().catch(()=>{}); }catch(e){}
+          scanResult.classList.add('notfound-glow'); setTimeout(()=>scanResult.classList.remove('notfound-glow'),1200);
+          return;
+        }
+        const json = await resp.json().catch(()=>null);
+        console.log('Lookup response JSON=', json);
+        if(resp.ok && json){
+          const prod = json.product || null;
+          fillResult(prod, code);
+          addHistory(prod ? (prod.product_name || code) : code);
+          if(prod){
+            try{ successSound.play().catch(()=>{}); }catch(e){}
+            scanResult.classList.add('found-glow'); setTimeout(()=>scanResult.classList.remove('found-glow'),1200);
+          } else {
+            try{ errorSound.play().catch(()=>{}); }catch(e){}
+            scanResult.classList.add('notfound-glow'); setTimeout(()=>scanResult.classList.remove('notfound-glow'),1200);
+          }
+        } else {
+          fillResult(null, code);
+          try{ errorSound.play().catch(()=>{}); }catch(e){}
+          scanResult.classList.add('notfound-glow'); setTimeout(()=>scanResult.classList.remove('notfound-glow'),1200);
+        }
+      }catch(err){
+        console.error('handleScan error', err);
+        fillResult(null, code);
+      }
+    }
+
+    async function createNewBarcodeRecord(code){
+      const name = prompt('Product not found. Enter a product name for barcode ' + code + ':', '');
+      if(!name){
+        return false;
+      }
+      const category = prompt('Enter product category (optional):', 'General') || 'General';
+      const price = parseFloat(prompt('Enter price (optional):', '0') || '0') || 0;
+      try{
+        const resp = await fetch('/barcode-scan/', {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.csrftoken
+          },
+          body: JSON.stringify({ barcode: code, product_name: name.trim(), category: category.trim(), price: price, mode: 'add', qty: 0 })
+        });
+        const json = await resp.json().catch(() => null);
+        console.log('createNewBarcodeRecord response=', resp.status, json);
+        if(resp.ok && json && json.ok){
+          showTempMessage('New product record saved for barcode ' + code, 2200);
+          return true;
+        }
+        if(json && json.error){
+          alert('Unable to create product: ' + json.error);
+        }
+      }catch(err){
+        console.error('createNewBarcodeRecord error', err);
+      }
+      return false;
+    }
+
+    function fillResult(p, code){
+      scanResult.style.display = 'block';
+      if(!p){
+        resName.innerText = 'Not found';
+        resCategory.innerText='—';
+        resQty.innerText='—';
+        resExp.innerText='—';
+        resBarcode.innerText = code || '—';
+        resConf.innerText = '—';
+        return;
+      }
+      resName.innerText = p.product_name;
+      resCategory.innerText = p.category || 'General';
+      resQty.innerText = p.quantity;
+      resExp.innerText = p.expiry_date || '—';
+      resBarcode.innerText = p.barcode || '';
+      resConf.innerText = p.confidence || '—';
+
+      // wire add/sell buttons
+      document.getElementById('addStockBtn').onclick = ()=>{ openAdjustDialog(p, 'add'); };
+      document.getElementById('sellBtn').onclick = ()=>{ openAdjustDialog(p, 'sell'); };
+    }
+
+    function addHistory(name){
+      const item = document.createElement('div'); item.className='history-item'; item.innerHTML = '✓ ' + name; historyList.prepend(item);
+      // keep last 8
+      while(historyList.children.length>8) historyList.removeChild(historyList.lastChild);
+    }
+
+    function openAdjustDialog(product, mode){
+      const qty = prompt((mode==='add'? 'Quantity to add' : 'Quantity sold') + ' for ' + product.product_name + ':', '1');
+      const n = parseInt(qty || '0', 10);
+      if(!n || n <= 0) return alert('Invalid quantity');
+      if(mode === 'sell' && n > product.quantity) return alert('Insufficient stock available.');
+      const payload = { barcode: product.barcode, mode: mode, qty: n };
+
+      fetch('/barcode-scan/', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
+          'X-CSRFToken': window.csrftoken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(async r => {
+        const j = await r.json().catch(() => null);
+        if(r.ok && j && j.ok){
+          alert('Updated');
+          fetch('/api/lookup/?barcode=' + encodeURIComponent(product.barcode)).then(()=>handleScan(product.barcode));
+        } else {
+          alert((j && j.error) || 'Failed');
+        }
+      })
+      .catch(err => {
+        console.error('Save request failed', err);
+        alert('Failed to update inventory.');
+      });
+    }
+
+    // Camera control using native MediaDevices API with robust error handling
+    let streamRef = null;
+    
+    async function startCamera() {
+      const video = document.getElementById('scannerVideo');
+      const cameraStatus = document.getElementById('cameraStatus');
+      const placeholderText = document.getElementById('placeholderText');
+      
+      // Check browser support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const msg = 'Camera API not supported in this browser. Please use Chrome, Firefox, or Edge.';
+        cameraStatus.innerText = msg;
+        console.error(msg);
+        alert(msg);
+        throw new Error('Camera API not supported');
+      }
+      
+      try {
+        cameraStatus.innerText = 'Requesting camera permission...';
+        
+        // Request camera access with environment facing mode for better barcode scanning
+        const constraints = {
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef = stream;
+        
+        // Set video stream
+        video.srcObject = stream;
+        video.muted = true;
+        video.playsInline = true;
+        video.style.display = 'block';
+        video.style.opacity = '1';
+        const placeholder = document.getElementById('cameraPlaceholder');
+        if (placeholder) placeholder.style.display = 'none';
+        
+        // Wait for video to load metadata before playing
+        return new Promise((resolve, reject) => {
+          video.onloadedmetadata = async () => {
+            try {
+              // Attempt to play video
+              const playPromise = video.play();
+              
+              if (playPromise !== undefined) {
+                playPromise
+                  .then(() => {
+                    cameraStatus.innerText = 'Camera Active';
+                    placeholderText.innerText = 'Camera Streaming';
+                    console.log('Camera started successfully');
+                    resolve(true);
+                  })
+                  .catch((err) => {
+                    console.error('Video play failed:', err);
+                    cameraStatus.innerText = 'Camera Error: Cannot play video';
+                    reject(err);
+                  });
+              } else {
+                cameraStatus.innerText = 'Camera Active';
+                placeholderText.innerText = 'Camera Streaming';
+                console.log('Camera started (play promise undefined)');
+                resolve(true);
+              }
+            } catch (err) {
+              console.error('Video playback error:', err);
+              cameraStatus.innerText = 'Camera Error: ' + (err.message || 'Unknown error');
+              reject(err);
+            }
+          };
+          
+          video.onerror = () => {
+            cameraStatus.innerText = 'Camera Error: Cannot load video';
+            reject(new Error('Video element error'));
+          };
+          
+          // Timeout fallback
+          const timeout = setTimeout(() => {
+            if (video.readyState >= 2) {
+              // Video is ready even without metadata event
+              console.log('Video ready via timeout');
+              resolve(true);
+            } else {
+              reject(new Error('Video load timeout'));
+            }
+          }, 5000);
+        });
+        
+      } catch (error) {
+        console.error('Camera access error:', error);
+        streamRef = null;
+        video.srcObject = null;
+        video.style.display = 'none';
+        document.getElementById('cameraPlaceholder').style.display = 'block';
+        
+        // Provide specific error messages
+        if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+          const msg = 'Camera Access Denied';
+          cameraStatus.innerText = msg;
+          alert('Camera permission was denied. Please allow camera access in your browser settings and try again.');
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+          const msg = 'Camera Not Found';
+          cameraStatus.innerText = msg;
+          alert('No camera device found. Please ensure your device has a camera.');
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+          const msg = 'Camera In Use';
+          cameraStatus.innerText = msg;
+          alert('Camera is being used by another application. Please close it and try again.');
+        } else if (error.name === 'TypeError') {
+          const msg = 'Camera Configuration Error';
+          cameraStatus.innerText = msg;
+          alert('Invalid camera configuration. Please refresh the page and try again.');
+        } else {
+          const msg = 'Camera Error: ' + (error.message || 'Unknown error');
+          cameraStatus.innerText = msg;
+          alert(msg);
+        }
+        
+        throw error;
+      }
+    }
+    
+    function stopCamera() {
+      try {
+        const video = document.getElementById('scannerVideo');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const placeholderText = document.getElementById('placeholderText');
+        
+        // Stop all tracks in stream
+        if (streamRef) {
+          streamRef.getTracks().forEach(track => {
+            track.stop();
+            console.log('Stopped track:', track.kind);
+          });
+          streamRef = null;
+        }
+        
+        // Clear video source
+        if (video) {
+          video.pause();
+          video.srcObject = null;
+          video.style.display = 'none';
+          video.style.opacity = '0';
+        }
+        
+        // Reset UI
+        cameraStatus.innerText = 'Camera Inactive';
+        placeholderText.innerText = 'Camera Disabled';
+        document.getElementById('cameraPlaceholder').style.display = 'block';
+        
+        console.log('Camera stopped');
+        
+        // Stop OCR loop if active
+        try { 
+          stopOCRLoop(); 
+        } catch (e) {
+          console.warn('OCR loop stop error:', e);
+        }
+        
+        // Stop html5-qrcode scanner if active
+        if (htmlScanner) { 
+          htmlScanner.stop().catch(() => {});
+          htmlScanner = null;
+        }
+        
+      } catch (e) {
+        console.error('stopCamera error:', e);
+      }
+    }
+
+    // OCR helpers
+    let ocrInterval = null;
+    const lastScans = {}; // code -> timestamp ms
+    function startOCRLoop(){
+      if(ocrInterval) return;
+      // initialize Tesseract worker lazily and set numeric whitelist
+      if(!window.ocrWorker && window.Tesseract && Tesseract.createWorker){
+        (async ()=>{
+          window.ocrWorker = await Tesseract.createWorker();
+          await window.ocrWorker.load();
+          await window.ocrWorker.loadLanguage('eng');
+          await window.ocrWorker.initialize('eng');
+          try{ await window.ocrWorker.setParameters({ tessedit_char_whitelist: '0123456789' }); }catch(e){}
+        })();
+      }
+
+      ocrInterval = setInterval(async ()=>{
+        if(!cameraEnabled) return;
+        try{
+          const video = document.getElementById('scannerVideo');
+          if(!video || video.readyState < 2) return;
+          const canvas = document.getElementById('ocrCanvas');
+          const ctx = canvas.getContext('2d');
+          // compute center ROI (40% of frame)
+          const vw = video.videoWidth || canvas.width;
+          const vh = video.videoHeight || canvas.height;
+          if(!vw || !vh) return;
+          const roiW = Math.floor(vw * 0.4);
+          const roiH = Math.floor(vh * 0.4);
+          const sx = Math.floor((vw - roiW) / 2);
+          const sy = Math.floor((vh - roiH) / 2);
+          // draw full video to an offscreen canvas then crop
+          const tmp = document.createElement('canvas'); tmp.width = roiW; tmp.height = roiH;
+          const tctx = tmp.getContext('2d');
+          try{ tctx.drawImage(video, sx, sy, roiW, roiH, 0, 0, roiW, roiH); }catch(e){ return; }
+          // preprocess: grayscale, contrast, threshold, sharpen
+          const id = tctx.getImageData(0,0,roiW,roiH);
+          const d = id.data;
+          // grayscale and increase contrast
+          const contrast = 1.6; // >1 increases contrast
+          for(let i=0;i<d.length;i+=4){
+            const r=d[i], g=d[i+1], b=d[i+2];
+            let gray = 0.299*r + 0.587*g + 0.114*b;
+            // contrast
+            gray = ((gray - 128) * contrast) + 128;
+            d[i]=d[i+1]=d[i+2]=gray;
+          }
+          // threshold
+          const threshold = 140;
+          for(let i=0;i<d.length;i+=4){ const v = d[i] > threshold ? 255 : 0; d[i]=d[i+1]=d[i+2]=v; }
+          // put back and sharpen via simple kernel
+          tctx.putImageData(id,0,0);
+          // sharpen
+          const sxId = tctx.getImageData(0,0,roiW,roiH);
+          const sxD = sxId.data;
+          const w = roiW, h = roiH;
+          const kernel = [0,-1,0,-1,5,-1,0,-1,0];
+          for(let y=1;y<h-1;y++){
+            for(let x=1;x<w-1;x++){
+              let r=0,g=0,b=0; let k=0;
+              for(let ky=-1;ky<=1;ky++){
+                for(let kx=-1;kx<=1;kx++){
+                  const px = x+kx, py = y+ky; const idx = (py*w+px)*4; const kval = kernel[k++];
+                  r += sxD[idx] * kval;
+                }
+              }
+              const idx = (y*w+x)*4; const v = Math.min(255, Math.max(0, r)); sxD[idx]=sxD[idx+1]=sxD[idx+2]=v;
+            }
+          }
+          tctx.putImageData(sxId,0,0);
+
+          // draw processed ROI into main ocr canvas for inspection (scale up)
+          canvas.width = roiW; canvas.height = roiH; ctx.drawImage(tmp,0,0);
+
+          // OCR
+          if(window.ocrWorker){
+            const { data: { text, confidence } } = await window.ocrWorker.recognize(canvas);
+            console.log('Raw OCR:', text);
+            const cleaned = (text||'').replace(/\D/g,'');
+            console.log('Cleaned OCR:', cleaned);
+            document.getElementById('ocrRaw').innerText = (text||'').trim();
+            document.getElementById('ocrCode').innerText = cleaned;
+            if(cleaned && cleaned.length>=6){
+              const code = cleaned.slice(0,6);
+              const now = Date.now();
+              if(lastScans[code] && (now - lastScans[code] < 3000)) return;
+              lastScans[code]=now;
+              barcodeInput.value = code;
+              try{ scanSound.play().catch(()=>{}); }catch(e){}
+              if(handleDemo(code, confidence)){
+                document.getElementById('ocrMatch').innerText = demoProducts[code].product_name;
+                addHistory(code + ' → ' + demoProducts[code].product_name);
+                return;
+              }
+              await handleScan(code);
+              addHistory('OCR: ' + code);
+            }
+          } else {
+            // fallback
+            const dataUrl = canvas.toDataURL('image/png');
+            if(window.Tesseract && Tesseract.recognize){
+              Tesseract.recognize(dataUrl, 'eng', { tessedit_char_whitelist: '0123456789' }).then(({data})=>{
+                const text = data.text||''; console.log('Raw OCR:', text);
+                const cleaned = (text||'').replace(/\D/g,''); console.log('Cleaned OCR:', cleaned);
+                document.getElementById('ocrRaw').innerText = (text||'').trim();
+                document.getElementById('ocrCode').innerText = cleaned;
+                if(cleaned && cleaned.length>=6){ const code = cleaned.slice(0,6); const now=Date.now(); if(lastScans[code] && (now-lastScans[code]<3000)) return; lastScans[code]=now; barcodeInput.value=code; try{ scanSound.play().catch(()=>{}); }catch(e){}; if(handleDemo(code, data.confidence)){ document.getElementById('ocrMatch').innerText = demoProducts[code].product_name; addHistory(code + ' → ' + demoProducts[code].product_name); return;} handleScan(code); addHistory('OCR: '+code); }
+              }).catch(()=>{});
+            }
+          }
+        }catch(e){ console.warn('OCR loop error', e); }
+      }, 1000);
+    }
+    function stopOCRLoop(){ if(ocrInterval){ clearInterval(ocrInterval); ocrInterval=null; } }
+
+    // Simulation loop: uses manual input field as source or last entered code
+    let simInterval = null;
+    function startSimLoop(){ if(simInterval) return; simInterval = setInterval(async ()=>{
+      const source = (barcodeInput.value||'').trim();
+      if(!source) return;
+      // simulate scanning UI steps
+      document.getElementById('cameraStatus').innerText = 'Scanning...';
+      showTempMessage('OCR Processing...', 900);
+      await new Promise(r=>setTimeout(r,800));
+      const cleaned = (source||'').replace(/\s|\r|\n|-/g,'').replace(/[^0-9]/g,'');
+      console.log('SIMULATED OCR TEXT:', source);
+      console.log('DETECTED CODE:', cleaned);
+      document.getElementById('ocrRaw').innerText = source;
+      document.getElementById('ocrCode').innerText = cleaned;
+      // play scan sound
+      try{ scanSound.play().catch(()=>{}); }catch(e){}
+      // check demo mapping
+      if(handleDemo(cleaned, 98)){
+        document.getElementById('ocrMatch').innerText = demoProducts[cleaned].product_name;
+        try{ successSound.play().catch(()=>{}); }catch(e){}
+        addHistory(cleaned + ' → ' + demoProducts[cleaned].product_name);
+      } else {
+        // not found
+        showTempMessage('Product Not Found', 1200);
+        try{ errorSound.play().catch(()=>{}); }catch(e){}
+        scanResult.classList.add('notfound-glow'); setTimeout(()=>scanResult.classList.remove('notfound-glow'),1200);
+      }
+      document.getElementById('cameraStatus').innerText = 'Camera Active';
+    }, 2000); }
+    function stopSimLoop(){ if(simInterval){ clearInterval(simInterval); simInterval=null; } }
+
+    // Demo products mapping
+    const demoProducts = {
+      '890001':{product_name:'Milk Packet', barcode:'890001', category:'Dairy', quantity:100, expiry_date:'24-06-2026'},
+      '890002':{product_name:'Bread', barcode:'890002', category:'Bakery', quantity:50, expiry_date:'23-06-2026'},
+      '890003':{product_name:'Biscuit', barcode:'890003', category:'Snacks', quantity:75, expiry_date:'15-07-2026'},
+      '890004':{product_name:'Rice', barcode:'890004', category:'Grocery', quantity:200, expiry_date:'31-12-2027'},
+      '890005':{product_name:'Sugar', barcode:'890005', category:'Grocery', quantity:150, expiry_date:'31-12-2027'},
+      '890006':{product_name:'Cheese', barcode:'890006', category:'Dairy', quantity:30, expiry_date:'12-08-2026'},
+      '890007':{product_name:'Apple Juice', barcode:'890007', category:'Beverages', quantity:90, expiry_date:'05-09-2026'},
+      '890008':{product_name:'Orange Juice', barcode:'890008', category:'Beverages', quantity:85, expiry_date:'06-09-2026'},
+      '890009':{product_name:'Lays Chips', barcode:'890009', category:'Snacks', quantity:120, expiry_date:'20-12-2026'},
+      '890010':{product_name:'Chocolate', barcode:'890010', category:'Confectionery', quantity:200, expiry_date:'31-12-2026'},
+    };
+
+    function handleDemo(code, confidence){
+      const demo = demoProducts[String(code)];
+      if(!demo) return false;
+      try{ scanSound.play().catch(()=>{}); }catch(e){}
+
+      const overlay = document.getElementById('blurOverlay');
+      const badge = document.getElementById('resultBadge');
+      const scanResult = document.getElementById('scanResult');
+      overlay.style.display = 'block';
+      badge.innerHTML = '<span class="success-badge">✓ Product Found</span>';
+      scanResult.style.display = 'block';
+      resName.innerText = demo.product_name;
+      resBarcode.innerText = demo.barcode;
+      resCategory.innerText = demo.category;
+      resQty.innerText = demo.quantity;
+      resExp.innerText = demo.expiry_date;
+      resConf.innerText = (confidence ? Math.round(confidence) + '%' : '—');
+      scanResult.classList.add('found-glow');
+      try{ successSound.play().catch(()=>{}); }catch(e){}
+      const box = document.getElementById('scanBox');
+      box.classList.add('scan-anim');
+      setTimeout(() => {
+        box.classList.remove('scan-anim');
+        overlay.style.display = 'none';
+        scanResult.classList.remove('found-glow');
+      }, 1200);
+
+      addHistory('Demo: ' + demo.product_name);
+
+      const payload = { barcode: demo.barcode, mode: 'add', qty: 1 };
+      fetch('/barcode-scan/', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With':'XMLHttpRequest',
+          'Content-Type':'application/json',
+          'X-CSRFToken': window.csrftoken
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(async r => {
+        const j = await r.json().catch(() => null);
+        if(r.ok && j && j.ok){
+          console.log('PRODUCT SAVED SUCCESSFULLY', j);
+          showTempMessage('Inventory Updated Successfully', 2000);
+          addHistory('Inventory: +1 ' + demo.product_name);
+          try{ window.dispatchEvent(new CustomEvent('inventoryUpdated', { detail: { barcode: demo.barcode, action: j.action } })); }catch(e){ }
+          try{
+            const statsResp = await fetch('/products/', { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+            if(statsResp.ok){ const statsJson = await statsResp.json().catch(() => null); if(statsJson && statsJson.stats){ console.log('REFRESHED STATS', statsJson.stats); } }
+          }catch(e){ console.warn('refresh stats failed', e); }
+        } else {
+          console.error('Database Save Failed', j || 'no-json');
+          showTempMessage('Database Save Failed', 3000);
+        }
+      })
+      .catch(err => {
+        console.error('Save request failed', err);
+        showTempMessage('Database Save Failed', 3000);
+      });
+
+      return true;
+    }
+
+    // small transient message in result panel
+    function showTempMessage(msg, ms){
+      const el = document.createElement('div'); el.style.cssText='position:absolute;right:18px;top:12px;background:rgba(0,0,0,0.5);padding:8px 12px;border-radius:10px;color:#E8F0FF;font-weight:700;z-index:60'; el.innerText=msg;
+      const parent = document.querySelector('.scanner-card'); parent.appendChild(el);
+      setTimeout(()=>{ el.remove(); }, ms||1800);
+    }
+
+  </script>
+</body>
+</html>

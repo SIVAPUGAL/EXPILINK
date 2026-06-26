@@ -1,0 +1,119 @@
+{% load static %}
+<style>
+.sidebar{
+    width:280px;
+    min-height:100vh;
+    position:fixed;
+    left:0;
+    top:0;
+    background:#02081d;
+    border-right:1px solid rgba(255,255,255,.05);
+    padding:30px 20px;
+    display:flex;
+    flex-direction:column;
+}
+
+.logo h1,
+.logo{
+    font-size:2.1rem;
+    margin-bottom:20px;
+    color:#46d9ff;
+    font-weight:800;
+}
+
+.profile-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:18px;
+    padding:14px;
+    margin-bottom:20px;
+}
+
+.profile-card img{
+    width:55px;
+    height:55px;
+    border-radius:14px;
+    object-fit:cover;
+}
+
+.sidebar-nav{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.sidebar-nav a{
+    position:relative;
+    padding:14px 18px;
+    color:#c9c9d4;
+    text-decoration:none;
+    border-radius:18px;
+    font-weight:600;
+    font-size:1rem;
+}
+
+.sidebar-nav a:hover{
+    background:rgba(255,255,255,.03);
+}
+
+.sidebar-nav a.active{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.sidebar-nav a.active::before{
+    content:'';
+    position:absolute;
+    left:10px;
+    top:15px;
+    width:6px;
+    height:38px;
+    border-radius:20px;
+    background:linear-gradient(to bottom,#4de0ff,#7d5fff);
+}
+
+.sidebar-bottom{
+    margin-top:auto;
+}
+
+.logout{
+    background:rgba(255,60,60,.08);
+    color:#ff7a7a !important;
+}
+
+/* compact sidebar padding and scroll */
+.sidebar{
+    padding:20px 18px;
+    overflow-y:auto;
+}
+</style>
+
+<aside class="sidebar">
+  <div class="logo">ExpiLink</div>
+
+    <div class="profile-card">
+    <img src="{% static 'images/profile_photo.png' %}" alt="avatar">
+    <div>
+      <div style="font-weight:700">{{ request.user.first_name|default:request.user.username }}</div>
+      <div style="color:rgba(255,255,255,.7);font-size:0.95rem">Store Owner</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Primary Navigation">
+    <a href="{% url 'dashboard' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">Dashboard</a>
+    <a href="{% url 'products' %}" class="{% if request.path == '/products/' %}active{% endif %}">Products</a>
+    <a href="{% url 'barcode_scan' %}" class="{% if request.path == '/barcode-scan/' %}active{% endif %}">Barcode Scan</a>
+    <a href="{% url 'alerts' %}" class="{% if request.path == '/alerts/' %}active{% endif %}">Alerts</a>
+    <a href="{% url 'requests' %}" class="{% if request.path == '/requests/' %}active{% endif %}">Requests</a>
+    <a href="{% url 'matching' %}" class="{% if request.path == '/matching/' %}active{% endif %}">Matching</a>
+    <a href="{% url 'analytics' %}" class="{% if request.path == '/analytics/' %}active{% endif %}">Analytics</a>
+    <a href="{% url 'settings' %}" class="{% if request.path == '/settings/' %}active{% endif %}">Settings</a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a href="{% url 'logout' %}" class="logout">Logout</a>
+  </div>
+</aside>

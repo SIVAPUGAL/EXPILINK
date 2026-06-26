@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ExpiLink — Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-grad-start:#020617;
+      --bg-grad-end:#030B25;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.08);
+      --glass-radius:24px;
+      --glass-blur:25px;
+      --accent-1:#22D3EE;
+      --accent-2:#3B82F6;
+      --cyan:#3EE7FF;
+      --text:#F8FAFC;
+      --muted:rgba(255,255,255,0.68);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--text);background:linear-gradient(180deg,var(--bg-grad-start),var(--bg-grad-end));-webkit-font-smoothing:antialiased;}
+    body{min-height:100vh;}
+
+    .sidebar{width:280px;min-height:100vh;position:fixed;left:0;top:0;background:#02081d;border-right:1px solid rgba(255,255,255,.05);padding:30px 20px;display:flex;flex-direction:column;}
+    .logo h1,.logo{font-size:2.1rem;margin-bottom:20px;color:#46d9ff;font-weight:800;}
+    .profile-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;margin-bottom:20px;}
+    .profile-card img{width:55px;height:55px;border-radius:14px;object-fit:cover;}
+
+    .sidebar-nav{display:flex;flex-direction:column;gap:6px;}
+    .sidebar-nav a{position:relative;padding:14px 18px;color:#c9c9d4;text-decoration:none;border-radius:18px;font-weight:600;font-size:1rem;}
+    .sidebar-nav a:hover{background:rgba(255,255,255,.03);}
+    .sidebar-nav a.active{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);}
+    .sidebar-nav a.active::before{content:'';position:absolute;left:10px;top:15px;width:6px;height:38px;border-radius:20px;background:linear-gradient(to bottom,#4de0ff,#7d5fff);}
+    .sidebar-bottom{margin-top:auto;}
+    .logout{background:rgba(255,60,60,.08);color:#ff7a7a !important;}
+
+    .page{margin-left:280px;padding:32px;min-height:100vh;}
+    .container{width:100%;margin:0;max-width:none;}
+
+    .header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
+    .title-wrap{max-width:780px;}
+    h1{font-size:32px;margin:0;font-weight:700;}
+    .subtitle{color:var(--muted);margin-top:6px;font-weight:500;}
+
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px;margin-bottom:20px;}
+    .stat-card{background:var(--glass);backdrop-filter:blur(var(--glass-blur));border:1px solid var(--glass-border);border-radius:var(--glass-radius);padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.6);transition:transform .22s ease,box-shadow .22s ease;}
+    .stat-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(59,123,255,0.06);}
+    .stat-value{font-size:2rem;font-weight:800;color:var(--text);}
+    .stat-label{color:var(--muted);margin-top:6px;font-weight:600;}
+
+    .analytics-table{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:24px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 10px 30px rgba(2,6,23,0.6);overflow:hidden;}
+    .analytics-table table{width:100%;border-collapse:collapse;}
+    .analytics-table thead{background:linear-gradient(90deg,#3DDCFF 0%,#8B5CF6 100%);}
+    .analytics-table th{color:#04111d;padding:18px 20px;text-align:left;font-size:1rem;font-weight:700;border:none;}
+    .analytics-table th:first-child{border-top-left-radius:24px;}
+    .analytics-table th:last-child{border-top-right-radius:24px;}
+    .analytics-table tbody tr{border-bottom:1px solid rgba(255,255,255,0.05);}
+    .analytics-table tbody tr:hover{background:rgba(255,255,255,0.04);}
+    .analytics-table td{padding:18px 20px;color:var(--text);border:none;}
+    .loss{color:#f87171;font-weight:700;}
+
+    @media (max-width:1399px){.stats{grid-template-columns:repeat(2,1fr);}}
+    @media (max-width:999px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media (max-width:699px){.stats{grid-template-columns:1fr;} .sidebar{display:none;} .page{margin-left:0;padding:20px;}}
+  </style>
+</head>
+<body>
+{% load static %}
+{% include 'components/sidebar.html' %}
+
+<main class="page">
+  <div class="container">
+    <header class="header">
+      <div class="title-wrap">
+        <h1>Analytics Dashboard</h1>
+        <div class="subtitle">Monitor inventory performance and potential loss.</div>
+      </div>
+    </header>
+
+    <section class="stats">
+      <div class="stat-card">
+        <div class="stat-value">{{ store_count }}</div>
+        <div class="stat-label">Total Stores</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ product_count }}</div>
+        <div class="stat-label">Total Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ transfer_count }}</div>
+        <div class="stat-label">Total Transfers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">₹{{ total_loss }}</div>
+        <div class="stat-label">Potential Loss</div>
+      </div>
+    </section>
+
+    <section class="analytics-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Potential Loss</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>{{ product.product_name }}</td>
+            <td>{{ product.quantity }}</td>
+            <td>₹{{ product.price }}</td>
+            <td class="loss">₹{{ product.potential_loss }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </div>
+</main>
+</body>
+</html>

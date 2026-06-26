@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ExpiLink Dashboard</title>
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f6f9;
+            margin:0;
+            padding:0;
+        }
+
+        .header{
+            background:#2c3e50;
+            color:white;
+            text-align:center;
+            padding:20px;
+        }
+
+        .container{
+            width:90%;
+            margin:auto;
+            margin-top:20px;
+        }
+
+        .cards{
+            display:flex;
+            gap:20px;
+            margin-bottom:20px;
+        }
+
+        .card{
+            flex:1;
+            color:white;
+            padding:20px;
+            border-radius:10px;
+            text-align:center;
+        }
+
+        .stores{
+            background:#3498db;
+        }
+
+        .products{
+            background:#27ae60;
+        }
+
+        .transfers{
+            background:#e67e22;
+        }
+
+        .box{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            margin-bottom:20px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th{
+            background:#2c3e50;
+            color:white;
+            padding:10px;
+        }
+
+        /* Per-th gradient headers for tables in home */
+        thead tr{background:transparent; display:grid; grid-template-columns: repeat(4, 1fr); gap:2px}
+        thead tr th{background: linear-gradient(135deg,#3DDCFF 0%,#8B5CF6 100%); color:#04111d; font-weight:700; padding:18px 20px}
+        thead tr th:first-child{border-top-left-radius:18px}
+        thead tr th:last-child{border-top-right-radius:18px}
+
+        td{
+            border:1px solid #ddd;
+            padding:10px;
+        }
+
+        tr:nth-child(even){
+            background:#f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>ExpiLink</h1>
+        <h3>AI Powered Expiry Loss Prevention System</h3>
+    </div>
+
+    <div class="container">
+
+        <div class="cards">
+
+            <div class="card stores">
+                <h2>{{ store_count }}</h2>
+                <p>Total Stores</p>
+            </div>
+
+            <div class="card products">
+                <h2>{{ product_count }}</h2>
+                <p>Total Products</p>
+            </div>
+
+            <div class="card transfers">
+                <h2>{{ transfer_count }}</h2>
+                <p>Total Transfers</p>
+            </div>
+
+        </div>
+
+        <div class="box">
+            <h2>⚠ Expiring Products</h2>
+
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th>Store</th>
+                    <th>Days Left</th>
+                    <th>Alert Level</th>
+                </tr>
+
+                {% for product in expiring_products %}
+                <tr>
+                    <td>{{ product.product_name }}</td>
+                    <td>{{ product.store }}</td>
+                    <td>{{ product.days_left }}</td>
+                    <td>{{ product.alert_level }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="box">
+            <h2>🔄 Transfer History</h2>
+
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th>From Store</th>
+                    <th>To Store</th>
+                    <th>Quantity</th>
+                </tr>
+
+                {% for transfer in transfers %}
+                <tr>
+                    <td>{{ transfer.product }}</td>
+                    <td>{{ transfer.from_store }}</td>
+                    <td>{{ transfer.to_store }}</td>
+                    <td>{{ transfer.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="box">
+            <h2>🔗 Store Matching</h2>
+
+            <table>
+                <tr>
+                    <th>Product</th>
+                    <th>Needed By</th>
+                    <th>Available At</th>
+                    <th>Available Quantity</th>
+                </tr>
+
+                {% for match in matches %}
+                <tr>
+                    <td>{{ match.product }}</td>
+                    <td>{{ match.needed_by }}</td>
+                    <td>{{ match.available_at }}</td>
+                    <td>{{ match.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
